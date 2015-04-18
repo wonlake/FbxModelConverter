@@ -43,7 +43,7 @@ void MFSkeleton::Serialize(std::fstream& fs)
 			{
 				FbxAMatrix matScale;
 				matScale.SetIdentity();
-				matScale[2][2] = -1;
+				matScale[2][2] = 1;
 				matBonePoseInverse = matScale * matBonePoseInverse;
 			}
 

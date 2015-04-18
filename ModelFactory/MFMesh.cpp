@@ -232,7 +232,7 @@ void MFMesh::Parse( FbxNode* pNode )
 	FbxAMatrix matGeometric;
 	FbxAMatrix matScale;
 	matScale.SetIdentity();
-	matScale[2][2] = -1.0;
+	matScale[2][2] = 1.0;
 
 	matGeometric.SetTRS(t, r, s);
 	

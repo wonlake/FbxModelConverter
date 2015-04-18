@@ -176,7 +176,7 @@ void MFAnimation::Serialize()
 	FbxAMatrix matTransform;
 	FbxAMatrix matScale;
 	matScale.SetIdentity();
-	matScale[2][2] = -1;
+	matScale[2][2] = 1;
 
 	for( int j = 0; j < m_numTotalFrames - 1; ++j )
 	{
