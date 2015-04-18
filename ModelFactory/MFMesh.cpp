@@ -275,7 +275,6 @@ void MFMesh::Parse( FbxNode* pNode )
 				float TPose[10];
 				fs.read( (char*)TPose, 40);
 
-				fs.seekp(40, SEEK_CUR);
 				m_mapBoneUsed[pName] = m_vecBonePoseInverse.size();
 				m_vecBonePoseInverse.push_back(std::make_tuple(pName, matFbx, pCluster));
 				delete[] pName;

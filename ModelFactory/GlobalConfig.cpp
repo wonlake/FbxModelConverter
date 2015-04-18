@@ -34,7 +34,7 @@ bool GlobalConfig::LoadConfig()
 	std::string strExePath = szPath;
 	int pos = strExePath.rfind("\\");
 
-	std::string strConfigPath = "MSFactoryConfig.xml";
+	std::string strConfigPath = "ModelFactoryConfig.xml";
 	if( pos != std::string::npos )
 		strConfigPath = strExePath.substr(0, pos + 1) + strConfigPath;
 
