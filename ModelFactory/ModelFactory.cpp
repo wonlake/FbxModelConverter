@@ -92,6 +92,8 @@ int main(int argc, char** argv)
 	pImporter->Initialize(argv[1], -1, pIOSettings);
 	pImporter->Import(pScene);
 
+	//FbxAxisSystem::DirectX.ConvertScene(pScene);
+
 	FbxNode* pRoot = pScene->GetRootNode();
 
 	FSUtility f;
@@ -132,9 +134,7 @@ int main(int argc, char** argv)
 		fsMS.write((char*)&version, 4);
 		ParseScene(pRoot, fsMS);
 		fsMS.close();
-	}
-
-
+	}	
 
 	pImporter->Destroy();
 	pScene->Destroy();
