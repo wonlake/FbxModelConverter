@@ -28,7 +28,7 @@ void MFClip::Serialize(std::fstream& fs)
 		std::map<std::string, std::string> mapAnimations;
 
 		{
-			std::string strClipsConfig = GlobalConfig::GetSingleton()->m_strOutputDirectory +
+			std::string strClipsConfig = GlobalConfig::GetSingleton()->m_strRootOutputPath +
 				"/clipnames.xml";
 			std::fstream fsClipsConfig(strClipsConfig, std::ios::in | std::ios::binary);
 			if( !fsClipsConfig.is_open() )
@@ -59,7 +59,7 @@ void MFClip::Serialize(std::fstream& fs)
 					}
 					std::string full_name = strPartName + "_" + name;
 					std::transform( full_name.begin(), full_name.end(), full_name.begin(), std::tolower );
-					std::string strAnimationFile = GlobalConfig::GetSingleton()->m_strAnimationsDirectory + "/" + full_name + ".anim";
+					std::string strAnimationFile = GlobalConfig::GetSingleton()->m_strAnimationOutputPath + "/" + full_name + ".anim";
 					std::fstream fsAnimationFile( strAnimationFile, std::ios::in | std::ios::binary );
 					if( fsAnimationFile.is_open() )
 					{
@@ -74,7 +74,7 @@ void MFClip::Serialize(std::fstream& fs)
 		auto iterEnd = mapAnimations.end();
 		while( iter != iterEnd )
 		{
-			std::string strAnimationFileName = GlobalConfig::GetSingleton()->m_strAnimationsDirectory + "/" + iter->first + ".anim";
+			std::string strAnimationFileName = GlobalConfig::GetSingleton()->m_strAnimationOutputPath + "/" + iter->first + ".anim";
 			std::fstream fsAnimationFile(strAnimationFileName, std::ios::in | std::ios::binary);
 
 			std::vector<int> vecDurations;
@@ -124,7 +124,7 @@ void MFClip::Serialize(std::fstream& fs)
 						strPartName = strPartName.substr(0, pos2); 
 				}
 
-				std::string strClipNodeFileName = GlobalConfig::GetSingleton()->m_strOutputDirectory + "/" + strPartName + "_" + iter->second + ".clip";
+				std::string strClipNodeFileName = GlobalConfig::GetSingleton()->m_strRootOutputPath + "/" + strPartName + "_" + iter->second + ".clip";
 				std::fstream fsClipNodeFile( strClipNodeFileName, std::ios::out | std::ios::binary );
 
 				int nameLen = iter->second.size() + 1;

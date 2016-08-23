@@ -27,7 +27,7 @@ void MFSkeleton::Serialize(std::fstream& fs)
 			if( pos2 != std::string::npos )
 				strPartName = strPartName.substr(0, pos2); 
 		}
-		std::string strSkeletonPartFile = GlobalConfig::GetSingleton()->m_strOutputDirectory + "/" + strPartName + ".skel";
+		std::string strSkeletonPartFile = GlobalConfig::GetSingleton()->m_strRootOutputPath + "/" + strPartName + ".skel";
 		std::fstream fsSkeleton(strSkeletonPartFile, std::ios::out | std::ios::binary);
 		int index = 0;
 		int numBones = m_pMesh->m_vecBonePoseInverse.size();

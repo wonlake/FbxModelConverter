@@ -9,10 +9,10 @@ public:
 	static GlobalConfig* GetSingleton();
 
 	std::string m_strFbxFilename;
-	std::string m_strOutputDirectory;
-	std::string m_strOutputDirectoryShort;
-	std::string m_strAnimationsDirectory;
-	std::string m_strTexturesDirectory;
+
+	std::string m_strAnimationOutputPath;
+	std::string m_strTextureOutputPath;
+	std::string m_strRootOutputPath;
 
 	bool m_bExportAnimations;
 	bool m_bNeedAttach;

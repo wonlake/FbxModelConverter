@@ -57,7 +57,7 @@ void MFAnimation::ParseScene(FbxNode* pRootNode)
 	if( GlobalConfig::GetSingleton()->m_bNeedTweakFrames )
 	{
 		TiXmlDocument doc;
-		std::string strTweakConfig = GlobalConfig::GetSingleton()->m_strOutputDirectory +
+		std::string strTweakConfig = GlobalConfig::GetSingleton()->m_strRootOutputPath +
 			"/tweakframes.xml";
 		doc.LoadFile( strTweakConfig.c_str() );	
 		auto rootElement = doc.RootElement();
@@ -85,7 +85,7 @@ void MFAnimation::ParseScene(FbxNode* pRootNode)
 			std::string full_name = targetName;
 			full_name += "_" + strAnimationName;
 			std::transform( full_name.begin(), full_name.end(), full_name.begin(), std::tolower );
-			std::string strAnimationFile = GlobalConfig::GetSingleton()->m_strAnimationsDirectory + "/" + full_name + ".anim";
+			std::string strAnimationFile = GlobalConfig::GetSingleton()->m_strAnimationOutputPath + "/" + full_name + ".anim";
 			std::fstream fsAnimationFile( strAnimationFile, std::ios::in | std::ios::binary);
 			if( fsAnimationFile.is_open() )
 			{
@@ -165,7 +165,7 @@ void MFAnimation::Serialize()
 	if( m_numDuration < 2 )
 		return;
 
-	std::fstream fs( GlobalConfig::GetSingleton()->m_strAnimationsDirectory + "/" + 
+	std::fstream fs( GlobalConfig::GetSingleton()->m_strAnimationOutputPath + "/" + 
 		GlobalConfig::GetSingleton()->m_strFbxFilename + ".anim",
 		std::ios::out | std::ios::binary);
 

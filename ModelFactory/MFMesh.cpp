@@ -255,7 +255,7 @@ void MFMesh::Parse( FbxNode* pNode )
 			if( pos2 != std::string::npos )
 				strPartName = strPartName.substr(0, pos2); 
 		}
-		std::string strSkeletonPartFile = GlobalConfig::GetSingleton()->m_strOutputDirectory + "/" + strPartName + ".skel";
+		std::string strSkeletonPartFile = GlobalConfig::GetSingleton()->m_strRootOutputPath + "/" + strPartName + ".skel";
 
 		std::fstream fs(strSkeletonPartFile, std::ios::in | std::ios::binary);
 		if( fs.is_open() )

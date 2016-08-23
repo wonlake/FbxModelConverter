@@ -6,9 +6,6 @@
 
 GlobalConfig::GlobalConfig(void)
 {
-	m_strAnimationsDirectory = "Animations";
-	m_strTexturesDirectory = "Textures";
-
 	m_bExportAnimations = false;
 	m_uiFrameRate = 100;
 
@@ -33,7 +30,7 @@ bool GlobalConfig::LoadConfig()
 	GetModuleFileNameA( NULL, szPath, MAX_PATH );
 	std::string strExePath = szPath;
 	int pos = strExePath.rfind("\\");
-
+	
 	std::string strConfigPath = "ModelFactoryConfig.xml";
 	if( pos != std::string::npos )
 		strConfigPath = strExePath.substr(0, pos + 1) + strConfigPath;
@@ -53,10 +50,25 @@ bool GlobalConfig::LoadConfig()
 	{
 		if( pChild == NULL )
 			return false;
-		m_strOutputDirectory = pChild->GetText();
-		break;
-
+		if (std::string(pChild->Value()) == "root" )
+		{
+			m_strRootOutputPath = pChild->GetText();
+		}
+		else if (std::string(pChild->Value()) == "animations")
+		{
+			m_strAnimationOutputPath = pChild->GetText();
+		}
+		else if (std::string(pChild->Value()) == "textures")
+		{
+			m_strTextureOutputPath = pChild->GetText();
+		}
 	} while ( pChild = pChild->NextSiblingElement());
 
+	if (m_strRootOutputPath == "" || m_strAnimationOutputPath == "" ||
+		m_strTextureOutputPath == "")
+	{
+		std::cout << "please set root, animations, textures node in the config xml!!!" << std::endl;
+		return false;
+	}
 	return true;
 }
