@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "MFAnimation.h"
 #include "GlobalConfig.h"
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 MFAnimation::MFAnimation(void)
 {

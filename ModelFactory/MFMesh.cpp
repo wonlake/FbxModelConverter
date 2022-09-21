@@ -9,7 +9,6 @@
 
 MFMesh::MFMesh(void)
 {
-	m_numBonesPerVertex = 0;
 }
 
 
@@ -64,16 +63,9 @@ void MFMesh::Serialize(std::fstream& fs)
 		fs.write((char*)&val, sizeof(float));
 	}
 
-	if( m_numBonesPerVertex > 0 )
-	{
-		tag = MF_BONESPERVERTEX;
-		fs.write( (char*)&tag, sizeof(tag) );
-		dataSize = 4;
-		fs.write( (char*)&dataSize, sizeof(int) );
-		fs.write( (char*)&m_numBonesPerVertex, sizeof(int) );
-	}
 
 	size_t numSubMesh = m_vecSubMesh.size();
+	bool hasAnimation = false;
 	for( int i = 0; i < (int)numSubMesh; ++i )
 	{
 		tag = MF_SUBMESH;		
@@ -82,6 +74,17 @@ void MFMesh::Serialize(std::fstream& fs)
 		fs.write( (char*)&dataSize, sizeof(int) );
 		fs.write( (char*)&(m_vecSubMesh[i]->m_numTriangles), sizeof(int) );
 		fs.write( (char*)&i, sizeof(int) );
+
+		if (m_vecSubMesh[i]->m_numBonesPerVertex > 0)
+		{
+			tag = MF_BONESPERVERTEX;
+			fs.write((char*)&tag, sizeof(tag));
+			dataSize = 4;
+			fs.write((char*)&dataSize, sizeof(int));
+			fs.write((char*)&m_vecSubMesh[i]->m_numBonesPerVertex, sizeof(int));
+
+			hasAnimation = true;
+		}
 
 		tag = MF_VERTEXINDEX;
 		fs.write( (char*)&tag, sizeof(tag) );
@@ -123,7 +126,8 @@ void MFMesh::Serialize(std::fstream& fs)
 		fs.write( (char*)&numElements, 4);
 		fs.write( (char*)m_vecSubMesh[i]->m_vecUV.data(), dataSize - 4 );
 
-		if( m_numBonesPerVertex > 0 )
+		
+		if( m_vecSubMesh[i]->m_numBonesPerVertex > 0 )
 		{ 
 			tag = MF_BONEINDEX;
 			fs.write( (char*)&tag, sizeof(tag) );
@@ -132,7 +136,7 @@ void MFMesh::Serialize(std::fstream& fs)
 			fs.write( (char*)&dataSize, 4 );
 			fs.write( (char*)&numElements, 4);
 			fs.write( (char*)m_vecSubMesh[i]->m_vecBoneIndex.data(), dataSize - 4 );
-
+			auto a = fs.tellg();
 			tag = MF_BONEWEIGHT;
 			fs.write( (char*)&tag, sizeof(tag) );
 			numElements = m_vecSubMesh[i]->m_vecBoneWeight.size();
@@ -188,7 +192,7 @@ void MFMesh::Serialize(std::fstream& fs)
 		}
 	}
 
-	if( m_numBonesPerVertex > 0 )
+	if(hasAnimation)
 	{
 		MFSkeleton skeleton(this);
 		skeleton.Serialize(fs);
@@ -198,8 +202,10 @@ void MFMesh::Serialize(std::fstream& fs)
 	}
 }
 
-void MFMesh::Parse( FbxNode* pNode )
+void MFMesh::Parse( FbxNode* pNode, MFMesh* pMerge )
 {
+	auto targetMesh = pMerge == nullptr ? this : pMerge;
+
 	FbxMesh* pMesh = pNode->GetMesh();
 	m_strName = pNode->GetName();
 	std::cout << "mesh name: " << m_strName << "\n";
@@ -225,7 +231,7 @@ void MFMesh::Parse( FbxNode* pNode )
 	if( numDeformers > 0 )
 		bHasAnimation = true;
 
-	m_transform = pNode->EvaluateGlobalTransform();
+	targetMesh->m_transform = pNode->EvaluateGlobalTransform();
 	FbxVector4 t = pNode->GeometricTranslation.Get();
 	FbxVector4 r = pNode->GeometricRotation.Get();
 	FbxVector4 s = pNode->GeometricScaling.Get();
@@ -236,8 +242,10 @@ void MFMesh::Parse( FbxNode* pNode )
 
 	matGeometric.SetTRS(t, r, s);
 	
-	FbxAMatrix matNodeTransformInv = m_transform.Inverse();
-	m_transform = matScale * m_transform * matGeometric;
+	FbxAMatrix matNodeTransformInv = targetMesh->m_transform.Inverse();
+	targetMesh->m_transform = matScale * targetMesh->m_transform * matGeometric;
+
+	int numBonesPerVertex = 0;
 
 	if( bHasAnimation )
 	{
@@ -275,23 +283,22 @@ void MFMesh::Parse( FbxNode* pNode )
 				float TPose[10];
 				fs.read( (char*)TPose, 40);
 
-				m_mapBoneUsed[pName] = m_vecBonePoseInverse.size();
-				m_vecBonePoseInverse.push_back(std::make_tuple(pName, matFbx, pCluster));
+				targetMesh->m_mapBoneUsed[pName] = targetMesh->m_vecBonePoseInverse.size();
+				targetMesh->m_vecBonePoseInverse.push_back(std::make_tuple(pName, matFbx, pCluster));
 				delete[] pName;
 			}
 		}
 		else
 		{
-			m_mapBoneUsed.insert( std::make_pair("No Root Motion", m_vecBonePoseInverse.size()) );
-			m_vecBonePoseInverse.push_back( std::make_tuple("No Root Motion", matIdentity, pCluster) );
 			if( GlobalConfig::GetSingleton()->m_bNeedAttach )
 			{
-				m_mapBoneUsed.insert( std::make_pair("attach point for away3d", m_vecBonePoseInverse.size()) );
-				m_vecBonePoseInverse.push_back( std::make_tuple("attach point for away3d", matIdentity, pCluster) );
+				targetMesh->m_mapBoneUsed.insert(std::make_pair("attach point for away3d", targetMesh->m_vecBonePoseInverse.size()));
+				targetMesh->m_vecBonePoseInverse.push_back(std::make_tuple("attach point for away3d", matIdentity, pCluster));
 			}
 		}
 		fs.close();
 
+		std::set<std::string> validBoneSet;
 		for( int i = 0; i < std::min(1, numDeformers); ++i )
 		{
 			FbxSkin* pSkin = (FbxSkin*)pMesh->GetDeformer(i, FbxDeformer::eSkin);
@@ -301,32 +308,41 @@ void MFMesh::Parse( FbxNode* pNode )
 				FbxCluster* pCluster = pSkin->GetCluster(j);
 
 				std::string strBoneName = pCluster->GetLink()->GetName();
-				auto iter = m_mapBoneUsed.find( strBoneName );
-				if( iter != m_mapBoneUsed.end() )
+				validBoneSet.insert(strBoneName);
+				auto iter = targetMesh->m_mapBoneUsed.find(strBoneName);
+				if (iter != targetMesh->m_mapBoneUsed.end())
 				{
-					std::get<2>(m_vecBonePoseInverse[iter->second]) = pCluster;
+					std::get<2>(targetMesh->m_vecBonePoseInverse[iter->second]) = pCluster;
 				}
 				else
 				{
-					m_mapBoneUsed.insert( std::make_pair(strBoneName, m_vecBonePoseInverse.size()) );
-					m_vecBonePoseInverse.push_back( std::make_tuple( strBoneName, matIdentity, pCluster) );
+					targetMesh->m_mapBoneUsed.insert(std::make_pair(strBoneName, targetMesh->m_vecBonePoseInverse.size()));
+					targetMesh->m_vecBonePoseInverse.push_back(std::make_tuple(strBoneName, matIdentity, pCluster));
 				}
 			}
 		}
 
 		size_t index = 0;
-		std::for_each( m_vecBonePoseInverse.begin(),
-			m_vecBonePoseInverse.end(), [&](std::tuple<std::string, FbxAMatrix, FbxCluster*> joint)
+		auto boneIterBegin = targetMesh->m_vecBonePoseInverse.begin();
+		auto boneIterEnd = targetMesh->m_vecBonePoseInverse.end();
+		
+		std::for_each(boneIterBegin, boneIterEnd, [&](std::tuple<std::string, FbxAMatrix, FbxCluster*> joint)
 		{
 			FbxCluster* pCluster = std::get<2>(joint);
 			if( pCluster )
 			{					
 				std::string strJointName = pCluster->GetLink()->GetName();
+				if (validBoneSet.find(strJointName) == validBoneSet.end())
+				{
+
+					++index;
+					return;
+				}
 				FbxAMatrix matModel, matLink;
 				pCluster->GetTransformMatrix(matModel);
 				pCluster->GetTransformLinkMatrix(matLink);
 
-				std::get<1>(m_vecBonePoseInverse[index]) =
+				std::get<1>(targetMesh->m_vecBonePoseInverse[index]) =
 					matLink.Inverse() * matModel * matNodeTransformInv;
 
 				int numPointInfluence = pCluster->GetControlPointIndicesCount();
@@ -346,12 +362,10 @@ void MFMesh::Parse( FbxNode* pNode )
 		auto iterEnd = vecCtrlPoint2SkeletonJoints.end();
 
 		while( iter != iterEnd )
-		{
-			if( iter->size() > (unsigned int)m_numBonesPerVertex )
+		{ 
+			if (iter->size() > numBonesPerVertex)
 			{
-				m_numBonesPerVertex = iter->size();
-				if( m_numBonesPerVertex > 4 ) 
-					m_numBonesPerVertex = 4;
+				numBonesPerVertex = iter->size();
 			}
 			++iter;
 		}
@@ -764,8 +778,9 @@ void MFMesh::Parse( FbxNode* pNode )
 		vecNormal.resize(numRealVertices * 3);
 		vecTangent.resize(numRealVertices * 3);
 		vecUV.resize(numRealVertices * 2);
-		vecBoneIndex.resize(numRealVertices * m_numBonesPerVertex);
-		vecBoneWeight.resize(numRealVertices * m_numBonesPerVertex);
+
+		vecBoneIndex.resize(numRealVertices * numBonesPerVertex);
+		vecBoneWeight.resize(numRealVertices * numBonesPerVertex);
 
 		for( int j = 0; j < numRealVertices; ++j )
 		{
@@ -777,8 +792,8 @@ void MFMesh::Parse( FbxNode* pNode )
 				vecCompactVertices[j].tangent[1], vecCompactVertices[j].tangent[2]));
 			if( numDeformers > 0 )
 			{
-				pos = m_transform.MultT(pos);
-				FbxAMatrix tmpMat = m_transform;
+				pos = targetMesh->m_transform.MultT(pos);
+				FbxAMatrix tmpMat = targetMesh->m_transform;
 				tmpMat[3][0] = tmpMat[3][1] = tmpMat[3][2] = 0.0;
 				tmpMat = tmpMat.Transpose().Inverse();
 				normal = tmpMat.MultT(normal);
@@ -792,10 +807,10 @@ void MFMesh::Parse( FbxNode* pNode )
 				if( k < 2 )
 					vecUV[j * 2 + k] = vecCompactVertices[j].uv[k];
 			}
-			for( int k = 0; k < m_numBonesPerVertex; ++k )
+			for( int k = 0; k < numBonesPerVertex; ++k )
 			{
-				vecBoneIndex[j * m_numBonesPerVertex + k] = vecCompactVertices[j].boneIdx[k];
-				vecBoneWeight[j * m_numBonesPerVertex + k] = vecCompactVertices[j].weight[k];
+				vecBoneIndex[j * numBonesPerVertex + k] = vecCompactVertices[j].boneIdx[k];
+				vecBoneWeight[j * numBonesPerVertex + k] = vecCompactVertices[j].weight[k];
 			}
 		}
 
@@ -815,10 +830,11 @@ void MFMesh::Parse( FbxNode* pNode )
 		pSubMesh->m_strDiffuseMap = strDiffuseMap;
 		pSubMesh->m_strNormalMap = strNormalMap;
 		pSubMesh->m_strSpecularMap = strSpecularMap;
+		pSubMesh->m_numBonesPerVertex = numBonesPerVertex;
 
-		m_vecSubMesh.push_back( pSubMesh );
+		targetMesh->m_vecSubMesh.push_back( pSubMesh );
 	}
 
 	if( numDeformers > 0 )
-		m_transform.SetIdentity();
+		targetMesh->m_transform.SetIdentity();
 }

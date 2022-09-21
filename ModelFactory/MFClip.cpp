@@ -1,15 +1,11 @@
 #include "StdAfx.h"
 #include "MFClip.h"
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include "GlobalConfig.h"
 #include "MFMesh.h"
 #include "MFFormat.h"
 
-#ifdef _DEBUG
-#pragma comment(lib, "tinyxml_d.lib")
-#else
-#pragma comment(lib, "tinyxml.lib")
-#endif
+#pragma comment(lib, "libtinyxml.lib")
 
 MFClip::MFClip(MFMesh* pMesh)
 {

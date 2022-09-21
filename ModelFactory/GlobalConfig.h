@@ -17,6 +17,7 @@ public:
 	bool m_bExportAnimations;
 	bool m_bNeedAttach;
 	bool m_bNeedTweakFrames;
+	bool m_bMergeMesh;
 
 	unsigned int m_uiFrameRate;
 

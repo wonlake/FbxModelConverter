@@ -1,22 +1,31 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ModelFactory", "ModelFactory\ModelFactory.vcxproj", "{FDBD1D79-5E44-45EE-AF39-26FC84187D87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
 		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Debug|Win32.ActiveCfg = Debug|Win32
 		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Debug|Win32.Build.0 = Debug|Win32
+		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Debug|x64.ActiveCfg = Debug|x64
+		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Debug|x64.Build.0 = Debug|x64
 		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Release|Win32.ActiveCfg = Release|Win32
 		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Release|Win32.Build.0 = Release|Win32
+		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Release|x64.ActiveCfg = Release|x64
+		{FDBD1D79-5E44-45EE-AF39-26FC84187D87}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {21091AA2-3FEC-478A-91F8-EB9277E829BF}
 	EndGlobalSection
 EndGlobal

@@ -15,6 +15,8 @@ public:
 	std::vector<int> m_vecBoneIndex;
 	std::vector<float> m_vecBoneWeight;
 
+	int m_numBonesPerVertex;
+
 	std::string m_strDiffuseMap;
 	std::string m_strNormalMap;
 	std::string m_strSpecularMap;

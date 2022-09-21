@@ -9,20 +9,18 @@
 #include "MFMesh.h"
 #include "GlobalConfig.h"
 
-#ifdef _DEBUG
-#pragma comment(lib, "libfbxsdk-mdd.lib")
-#pragma comment(lib, "arg_parser_d.lib")
-#else
 #pragma comment(lib, "libfbxsdk-md.lib")
-#pragma comment(lib, "arg_parser.lib")
-#endif
+#pragma comment(lib, "libxml2-md.lib")
+#pragma comment(lib, "zlib-md.lib")
+#pragma comment(lib, "libarg_parser.lib")
 
 
 std::vector<MFMesh*> g_vecMeshes;
 
-void ParseScene(FbxNode* pRootNode, std::fstream& fs)
+void ParseScene(FbxNode* pRootNode, std::fstream& fs, MFMesh* pMergeMesh)
 {
 	int numChildren = pRootNode->GetChildCount();
+
 	for (int i = 0; i < numChildren; ++i)
 	{
 		FbxNode* pNode = pRootNode->GetChild(i);
@@ -33,17 +31,19 @@ void ParseScene(FbxNode* pRootNode, std::fstream& fs)
 			{
 			case FbxNodeAttribute::eMesh:
 			{
-											MFMesh* pMesh = new MFMesh();
-											pMesh->Parse(pNode);
-											pMesh->Serialize(fs);
-			}
+				MFMesh* pMesh = new MFMesh();
+				pMesh->Parse(pNode, pMergeMesh); 
+				if(pMergeMesh == nullptr)
+					pMesh->Serialize(fs);
+				delete pMesh;
 				break;
+			}
 			default:
 				std::cout << "unknown node attribute!\n";
 				break;
 			}
 		}
-		ParseScene(pNode, fs);
+		ParseScene(pNode, fs, pMergeMesh);
 	}
 }
 
@@ -54,6 +54,7 @@ int main(int argc, char** argv)
 
 	Arg_parser::Option opt[] = {
 		{'i', "input_file", Arg_parser::yes },
+		{251, "merge_mesh", Arg_parser::no},
 		{252, "frame_rate", Arg_parser::yes },
 		{253, "export_animation", Arg_parser::no },
 		{254, "attach", Arg_parser::no},
@@ -74,6 +75,10 @@ int main(int argc, char** argv)
 		if (code == 'i')
 		{
 			fbx_filename = parser.argument(i);
+		}
+		else if (code == 251)
+		{
+			GlobalConfig::GetSingleton()->m_bMergeMesh = true;
 		}
 		else if (code == 252)
 		{
@@ -144,7 +149,17 @@ int main(int argc, char** argv)
 		fsMS.write((char*)&dataSize, 4);
 		unsigned int version = 0x10000001;
 		fsMS.write((char*)&version, 4);
-		ParseScene(pRoot, fsMS);
+		MFMesh* pMergeMesh = nullptr;
+		if (GlobalConfig::GetSingleton()->m_bMergeMesh)
+		{
+			pMergeMesh = new MFMesh();
+			pMergeMesh->m_strName = GlobalConfig::GetSingleton()->m_strFbxFilename;
+		}
+
+		ParseScene(pRoot, fsMS, pMergeMesh);
+		if (pMergeMesh != nullptr)
+			pMergeMesh->Serialize(fsMS);
+		delete pMergeMesh;
 		fsMS.close();
 	}	
 

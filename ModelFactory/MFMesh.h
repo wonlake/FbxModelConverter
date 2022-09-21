@@ -29,7 +29,7 @@ public:
 	MFMesh(void);
 	~MFMesh(void);
 
-	void Parse(FbxNode* pNode);
+	void Parse(FbxNode* pNode, MFMesh* pMergeMesh);
 	void Serialize(std::fstream& fs);
 
 	std::vector<MFSubMesh*> m_vecSubMesh;
@@ -38,6 +38,5 @@ public:
 
 	FbxAMatrix m_transform;
 	std::string m_strName;
-	int m_numBonesPerVertex;
 };
 

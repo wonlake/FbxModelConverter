@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "GlobalConfig.h"
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <windows.h>
 
 GlobalConfig::GlobalConfig(void)
@@ -11,6 +11,7 @@ GlobalConfig::GlobalConfig(void)
 
 	m_bNeedAttach = false;
 	m_bNeedTweakFrames = false;
+	m_bMergeMesh = false;
 }
 
 
@@ -32,8 +33,6 @@ bool GlobalConfig::LoadConfig()
 	int pos = strExePath.rfind("\\");
 	
 	std::string strConfigPath = "ModelFactoryConfig.xml";
-	if( pos != std::string::npos )
-		strConfigPath = strExePath.substr(0, pos + 1) + strConfigPath;
 
 	std::fstream fsConfig(strConfigPath, std::ios::in);
 	if( !fsConfig.is_open() )
