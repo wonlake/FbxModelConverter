@@ -1,11 +1,9 @@
 #include "StdAfx.h"
 #include "MFClip.h"
-#include <tinyxml.h>
 #include "GlobalConfig.h"
 #include "MFMesh.h"
 #include "MFFormat.h"
-
-#pragma comment(lib, "libtinyxml.lib")
+#include <nlohmann/json.hpp>
 
 MFClip::MFClip(MFMesh* pMesh)
 {
@@ -25,44 +23,34 @@ void MFClip::Serialize(std::fstream& fs)
 
 		{
 			std::string strClipsConfig = GlobalConfig::GetSingleton()->m_strRootOutputPath +
-				"/clipnames.xml";
-			std::fstream fsClipsConfig(strClipsConfig, std::ios::in | std::ios::binary);
+				"/clipnames.json";
+			std::ifstream fsClipsConfig(strClipsConfig);
 			if( !fsClipsConfig.is_open() )
 			{
 				return;
 			}
-			else
+
+			auto doc = nlohmann::json::parse(fsClipsConfig);
+			for (auto item : doc.items())
 			{
-				fsClipsConfig.close();
+				const auto& name = item.key();
 
-				TiXmlDocument doc;
-				doc.LoadFile( strClipsConfig.c_str() );	
-				auto rootElement = doc.RootElement();
-				auto pChild = rootElement->FirstChildElement();
-				std::string fbxname = GlobalConfig::GetSingleton()->m_strFbxFilename;
-				do 
+				std::string strPartName = GlobalConfig::GetSingleton()->m_strFbxFilename;
+				std::transform(strPartName.begin(), strPartName.end(), strPartName.begin(), std::tolower);
+				int pos1 = strPartName.rfind("_");
+				if (pos1 != std::string::npos)
 				{
-					if( pChild == NULL )
-						break;
-
-					auto name = pChild->Attribute("name");
-					std::string strPartName = GlobalConfig::GetSingleton()->m_strFbxFilename;
-					std::transform( strPartName.begin(), strPartName.end(), strPartName.begin(), std::tolower);
-					int pos1 = strPartName.rfind("_");
-					if( pos1 != std::string::npos )
-					{
-						strPartName = strPartName.substr(0, pos1); 
-					}
-					std::string full_name = strPartName + "_" + name;
-					std::transform( full_name.begin(), full_name.end(), full_name.begin(), std::tolower );
-					std::string strAnimationFile = GlobalConfig::GetSingleton()->m_strAnimationOutputPath + "/" + full_name + ".anim";
-					std::fstream fsAnimationFile( strAnimationFile, std::ios::in | std::ios::binary );
-					if( fsAnimationFile.is_open() )
-					{
-						mapAnimations[full_name] = name;
-						fsAnimationFile.close();
-					}
-				} while ( pChild = pChild->NextSiblingElement());
+					strPartName = strPartName.substr(0, pos1);
+				}
+				std::string full_name = strPartName + "_" + name;
+				std::transform(full_name.begin(), full_name.end(), full_name.begin(), std::tolower);
+				std::string strAnimationFile = GlobalConfig::GetSingleton()->m_strAnimationOutputPath + "/" + full_name + ".anim";
+				std::fstream fsAnimationFile(strAnimationFile, std::ios::in | std::ios::binary);
+				if (fsAnimationFile.is_open())
+				{
+					mapAnimations[full_name] = name;
+					fsAnimationFile.close();
+				}
 			}
 		}		
 

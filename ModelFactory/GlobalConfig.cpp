@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "GlobalConfig.h"
 
-#include <tinyxml.h>
 #include <windows.h>
+#include <nlohmann/json.hpp>
 
 GlobalConfig::GlobalConfig(void)
 {
@@ -32,42 +32,31 @@ bool GlobalConfig::LoadConfig()
 	std::string strExePath = szPath;
 	int pos = strExePath.rfind("\\");
 	
-	std::string strConfigPath = "ModelFactoryConfig.xml";
+	std::string strConfigPath = "ModelFactoryConfig.json";
 
 	std::fstream fsConfig(strConfigPath, std::ios::in);
 	if( !fsConfig.is_open() )
 	{
 		return false;
-	}
-	fsConfig.close();
+	} 
+	auto doc = nlohmann::json::parse(fsConfig);
 
-	TiXmlDocument doc;
-	doc.LoadFile( strConfigPath.c_str() );	
-	auto rootElement = doc.RootElement();
-	auto pChild = rootElement->FirstChildElement();
-	do 
-	{
-		if( pChild == NULL )
-			return false;
-		if (std::string(pChild->Value()) == "root" )
-		{
-			m_strRootOutputPath = pChild->GetText();
-		}
-		else if (std::string(pChild->Value()) == "animations")
-		{
-			m_strAnimationOutputPath = pChild->GetText();
-		}
-		else if (std::string(pChild->Value()) == "textures")
-		{
-			m_strTextureOutputPath = pChild->GetText();
-		}
-	} while ( pChild = pChild->NextSiblingElement());
+	if (doc.contains("root"))
+		m_strRootOutputPath = doc["root"];
+	if (doc.contains("animations"))
+		m_strAnimationOutputPath = doc["animations"];
+	if (doc.contains("textures"))
+		m_strTextureOutputPath = doc["textures"];
 
 	if (m_strRootOutputPath == "" || m_strAnimationOutputPath == "" ||
 		m_strTextureOutputPath == "")
 	{
-		std::cout << "please set root, animations, textures node in the config xml!!!" << std::endl;
+		std::cout << "please set root, animations, textures node in the config json!!!" << std::endl;
 		return false;
 	}
+
+	std::string strTweakConfig = GlobalConfig::GetSingleton()->m_strRootOutputPath +
+		"/tweakframes.json";
+
 	return true;
 }

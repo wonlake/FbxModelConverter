@@ -17,7 +17,7 @@
 
 std::vector<MFMesh*> g_vecMeshes;
 
-void ParseScene(FbxNode* pRootNode, std::fstream& fs, MFMesh* pMergeMesh)
+void ParseScene(::FbxNode* pRootNode, std::fstream& fs, MFMesh* pMergeMesh)
 {
 	int numChildren = pRootNode->GetChildCount();
 
@@ -27,7 +27,8 @@ void ParseScene(FbxNode* pRootNode, std::fstream& fs, MFMesh* pMergeMesh)
 		FbxNodeAttribute* pNodeAttrib = pNode->GetNodeAttribute();
 		if (pNodeAttrib != NULL)
 		{
-			switch (pNodeAttrib->GetAttributeType())
+			auto t = pNodeAttrib->GetAttributeType();
+			switch (t)
 			{
 			case FbxNodeAttribute::eMesh:
 			{
@@ -38,8 +39,11 @@ void ParseScene(FbxNode* pRootNode, std::fstream& fs, MFMesh* pMergeMesh)
 				delete pMesh;
 				break;
 			}
+			case FbxNodeAttribute::eSkeleton:
+				continue;
 			default:
-				std::cout << "unknown node attribute!\n";
+				std::cout << "unknown node attribute=" << t << " name= " 
+					<< pNode->GetName() << "!\n";
 				break;
 			}
 		}
@@ -126,7 +130,7 @@ int main(int argc, char** argv)
 	GlobalConfig::GetSingleton()->m_strFbxFilename = f.GetFileName();
 	if (GlobalConfig::GetSingleton()->LoadConfig() == false)
 	{
-		std::cout << "please check the config xml!" << std::endl;
+		std::cout << "please check the config json!" << std::endl;
 		return -1;
 	}
 	

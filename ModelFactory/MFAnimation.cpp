@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "MFAnimation.h"
 #include "GlobalConfig.h"
-#include <tinyxml.h>
+#include <nlohmann/json.hpp>
 
 MFAnimation::MFAnimation(void)
 {
@@ -56,20 +56,16 @@ void MFAnimation::ParseScene(FbxNode* pRootNode)
 
 	if( GlobalConfig::GetSingleton()->m_bNeedTweakFrames )
 	{
-		TiXmlDocument doc;
 		std::string strTweakConfig = GlobalConfig::GetSingleton()->m_strRootOutputPath +
-			"/tweakframes.xml";
-		doc.LoadFile( strTweakConfig.c_str() );	
-		auto rootElement = doc.RootElement();
-		auto pChild = rootElement->FirstChildElement();
-		std::string fbxname = GlobalConfig::GetSingleton()->m_strFbxFilename;
-		do 
-		{
-			if( pChild == NULL )
-				break;
+			"/tweakframes.json";
+		std::ifstream f(strTweakConfig); 
+	    auto doc = nlohmann::json::parse(f);
 
-			auto name = pChild->Attribute("name");
-			auto targetName = pChild->GetText();
+		for (auto iter : doc.items()) 
+		{
+			auto m = iter.value();
+			auto name = m["src"];
+			auto targetName = m["target"];
 
 			std::string strAnimationName = GlobalConfig::GetSingleton()->m_strFbxFilename;
 			std::transform( strAnimationName.begin(), strAnimationName.end(), strAnimationName.begin(), std::tolower);
@@ -122,8 +118,7 @@ void MFAnimation::ParseScene(FbxNode* pRootNode)
 
 				m_numDuration = totalDuration;
 			}
-		} while ( pChild = pChild->NextSiblingElement());
-
+		} 
 	}
 
 	if( m_numDuration < m_numFrameRate && m_numDuration > 1 )
@@ -160,6 +155,92 @@ void MFAnimation::ParseScene(FbxNode* pRootNode)
 	}
 }
 
+//#include <fbxsdk.h>
+//
+//// 假设您已经有一个已初始化并加载了FBX文件的 FbxScene 对象
+//FbxScene* scene;
+//
+//// 获取场景中的第一个节点
+//FbxNode* node = scene->GetRootNode()->GetChild(0); // 假设这里是要获取第一个子节点的关键帧数据
+//
+//// 获取节点的动画轨道
+//FbxAnimLayer* anim_layer = scene->GetSrcObject<FbxAnimLayer>();
+//FbxAnimCurveNode* anim_curve_node = node->LclRotation.GetCurveNode(anim_layer); // 获取旋转动画曲线节点
+//
+//// 检查动画轨道是否存在
+//if (anim_curve_node) {
+//	// 获取 X 轴的动画曲线
+//	FbxAnimCurve* anim_curve_x = anim_curve_node->GetCurve(0, FBXSDK_CURVENODE_COMPONENT_X);
+//	if (anim_curve_x) {
+//		// 输出关键帧数据
+//		for (int i = 0; i < anim_curve_x->KeyGetCount(); i++) {
+//			FbxTime key_time = anim_curve_x->KeyGetTime(i);
+//			double key_value = anim_curve_x->KeyGetValue(i);
+//			// 在这里使用旋转关键帧数据进行处理
+//		}
+//	}
+//
+//	// 获取 Y 轴的动画曲线
+//	FbxAnimCurve* anim_curve_y = anim_curve_node->GetCurve(0, FBXSDK_CURVENODE_COMPONENT_Y);
+//	if (anim_curve_y) {
+//		// 输出关键帧数据
+//		for (int i = 0; i < anim_curve_y->KeyGetCount(); i++) {
+//			FbxTime key_time = anim_curve_y->KeyGetTime(i);
+//			double key_value = anim_curve_y->KeyGetValue(i);
+//			// 在这里使用旋转关键帧数据进行处理
+//		}
+//	}
+//
+//	// 获取 Z 轴的动画曲线
+//	FbxAnimCurve* anim_curve_z = anim_curve_node->GetCurve(0, FBXSDK_CURVENODE_COMPONENT_Z);
+//	if (anim_curve_z) {
+//		// 输出关键帧数据
+//		for (int i = 0; i < anim_curve_z->KeyGetCount(); i++) {
+//			FbxTime key_time = anim_curve_z->KeyGetTime(i);
+//			double key_value = anim_curve_z->KeyGetValue(i);
+//			// 在这里使用旋转关键帧数据进行处理
+//		}
+//	}
+//}
+//
+//// 获取节点的缩放动画轨道
+//FbxAnimCurveNode* anim_curve_node_scale = node->LclScaling.GetCurveNode(anim_layer);
+//
+//// 检查缩放动画轨道是否存在
+//if (anim_curve_node_scale) {
+//	// 获取 X 轴的动画曲线
+//	FbxAnimCurve* anim_curve_x_scale = anim_curve_node_scale->GetCurve(0, FBXSDK_CURVENODE_COMPONENT_X);
+//	if (anim_curve_x_scale) {
+//		// 输出关键帧数据
+//		for (int i = 0; i < anim_curve_x_scale->KeyGetCount(); i++) {
+//			FbxTime key_time = anim_curve_x_scale->KeyGetTime(i);
+//			double key_value = anim_curve_x_scale->KeyGetValue(i);
+//			// 在这里使用缩放关键帧数据进行处理
+//		}
+//	}
+//
+//	// 获取 Y 轴的动画曲线
+//	FbxAnimCurve* anim_curve_y_scale = anim_curve_node_scale->GetCurve(0, FBXSDK_CURVENODE_COMPONENT_Y);
+//	if (anim_curve_y_scale) {
+//		// 输出关键帧数据
+//		for (int i = 0; i < anim_curve_y_scale->KeyGetCount(); i++) {
+//			FbxTime key_time = anim_curve_y_scale->KeyGetTime(i);
+//			double key_value = anim_curve_y_scale->KeyGetValue(i);
+//			// 在这里使用缩放关键帧数据进行处理
+//		}
+//	}
+//
+//	// 获取 Z 轴的动画曲线
+//	FbxAnimCurve* anim_curve_z_scale = anim_curve_node_scale->GetCurve(0, FBXSDK_CURVENODE_COMPONENT_Z);
+//	if (anim_curve_z_scale) {
+//		// 输出关键帧数据
+//		for (int i = 0; i < anim_curve_z_scale->KeyGetCount(); i++) {
+//			FbxTime key_time = anim_curve_z_scale->KeyGetTime(i);
+//			double key_value = anim_curve_z_scale->KeyGetValue(i);
+//			// 在这里使用缩放关键帧数据进行处理
+//		}
+//	}
+//}
 void MFAnimation::Serialize()
 {
 	if( m_numDuration < 2 )
